@@ -1,0 +1,328 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Ryujin Custom Hub",
+    Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+    LoadingTitle = "Ryujin Fucker",
+    LoadingSubtitle = "by austin.",
+    Theme = "AmberGlow", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+ 
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
+ 
+    ConfigurationSaving = {
+       Enabled = true,
+       FolderName = nil, -- Create a custom folder for your hub/game
+       FileName = "Big Hub"
+    },
+ 
+    Discord = {
+       Enabled = true, -- Prompt the user to join your Discord server if their executor supports it
+       Invite = "PudBKwgaC9", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
+       RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+    },
+ 
+    KeySystem = true, -- Set this to true to use our key system
+    KeySettings = {
+       Title = "Key System",
+       Subtitle = "Link was Copied to Clipboard",
+       Note = "https://direct-link.net/1273611/thunderkey", -- Use this to tell the user how to get a key
+       FileName = "thunderKey", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+       SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+       GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+       Key = {"https://pastebin.com/raw/WvEdGbqL"}, -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+       setclipboard("https://direct-link.net/1273611/thunderkey"),
+       Notification = Rayfield:Notify({
+           Title = "Key System",
+           Content = "Key link copied to clipboard!",
+           Duration = 3
+       })
+    }
+})
+
+local Tab = Window:CreateTab("Autofarm", 4483362458) -- Title, Image
+
+local Section = Tab:CreateSection("Autofarm")
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local humanoidRootPart = nil  -- Declare at top level
+local currentTween = nil  -- Add this at the top with other variables
+
+local function tweenToDelivery(aNumber)
+    local deliveryAreas = workspace.Ignore.Interactables.JobsRelated["Delivery Areas"]
+    local area = deliveryAreas:FindFirstChild("a" .. aNumber)
+    
+    if area then
+        local targetPosition = area.Position + Vector3.new(0, -21, 0)
+        local tweenInfo = TweenInfo.new(6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        if currentTween then currentTween:Cancel() end
+        currentTween = TweenService:Create(humanoidRootPart, tweenInfo, {
+            CFrame = CFrame.new(targetPosition, area.Position) * CFrame.Angles(math.rad(90), 0, 0)
+        })
+        currentTween:Play()
+    end
+end
+
+local function checkForBills()
+    local deliveryAreas = workspace.Ignore.Interactables.JobsRelated["Delivery Areas"]
+    
+    for i = 1, 11 do
+        local area = deliveryAreas:FindFirstChild("a" .. i)
+        if area and area:FindFirstChild("LocationBill") then
+            tweenToDelivery(i)
+            return true
+        end
+    end
+    return false
+end
+
+
+local function tweenToAndClick(tempPart)
+    if not tempPart then return end
+    
+    local targetPosition = tempPart.Position + Vector3.new(0, -11, 4)
+    local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    if currentTween then currentTween:Cancel() end
+    currentTween = TweenService:Create(humanoidRootPart, tweenInfo, {
+        CFrame = CFrame.new(targetPosition, tempPart.Position) * CFrame.Angles(math.rad(90), 0, 0)
+    })
+    
+    local clicking = true
+    task.spawn(function()
+        while clicking do
+            local clickDetector = tempPart:FindFirstChild("ClickDetector")
+            if clickDetector then
+                fireclickdetector(clickDetector)
+            end
+            task.wait(0.1)
+        end
+    end)
+    
+    currentTween.Completed:Connect(function()
+        clicking = false
+    end)
+    
+    currentTween:Play()
+end
+
+local function checkDeliveryPosters()
+    local jobBorders = workspace.Ignore.Interactables.JobsRelated["Job Borders"]
+    
+    for _, border in pairs(jobBorders:GetChildren()) do
+        if border.Name == "Border" then
+            local postersFolder = border:FindFirstChild("Posters")
+            if postersFolder then
+                for _, tempPart in pairs(postersFolder:GetChildren()) do
+                    if tempPart.Name:match("^temp%d+$") then
+                        local surfaceGui = tempPart:FindFirstChild("SurfaceGui")
+                        if surfaceGui then
+                            local info = surfaceGui:FindFirstChild("Info")
+                            if info and info:IsA("TextLabel") and 
+                               string.match(info.Text, "^Deliver") then
+                                tweenToAndClick(tempPart)
+                                return true
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
+local function tweenToJobBoard()
+    local jobBorders = workspace.Ignore.Interactables.JobsRelated["Job Borders"]
+    if jobBorders then
+        local targetPosition = jobBorders.Position + Vector3.new(0, -11, 4)
+        local tweenInfo = TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        if currentTween then currentTween:Cancel() end
+        currentTween = TweenService:Create(humanoidRootPart, tweenInfo, {
+            CFrame = CFrame.new(targetPosition) * CFrame.Angles(math.rad(90), 0, 0)
+        })
+        currentTween:Play()
+    end
+end
+
+local Toggle = Tab:CreateToggle({
+    Name = "Money Farm",
+    CurrentValue = false,
+    Flag = "Toggle1",
+    Callback = function(Value)
+        if Value then
+            -- Initialize variables
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            humanoidRootPart = character:WaitForChild("HumanoidRootPart")  -- Update the top-level variable
+            
+            -- Create a flag to control the farming loop
+            _G.farming = true
+            
+            -- Character added connection to update humanoidRootPart
+            player.CharacterAdded:Connect(function(newCharacter)
+                humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+            end)
+            
+            -- Start the farming coroutine
+            coroutine.wrap(function()
+                while _G.farming and task.wait(1) do
+                    -- Ensure valid character and humanoidRootPart
+                    if not character or not character.Parent or not humanoidRootPart or not humanoidRootPart.Parent then
+                        character = player.Character or player.CharacterAdded:Wait()
+                        humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+                        continue
+                    end
+                    
+                    -- Check for bills and delivery posters
+                    if not checkForBills() then
+                        if not checkDeliveryPosters() then
+                            tweenToJobBoard()
+                        end
+                    end
+                end
+            end)()
+        else
+            -- Stop the farming loop when toggle is turned off
+            _G.farming = false
+            
+            -- Cancel any ongoing tween
+            if currentTween then
+                currentTween:Cancel()
+                currentTween = nil
+            end
+            
+            -- Reset character rotation
+            if humanoidRootPart then
+                local resetTween = TweenService:Create(humanoidRootPart, TweenInfo.new(1), {
+                    CFrame = CFrame.new(humanoidRootPart.Position)
+                })
+                resetTween:Play()
+            end
+        end
+    end
+})
+
+local Toggle2 = Tab:CreateToggle({
+    Name = "Auto Roadwork",
+    CurrentValue = false,
+    Flag = "Automates Roadwork",
+    Callback = function(Value)
+        if Value then
+            -- Initialize variables
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            local root = character:WaitForChild("HumanoidRootPart")
+            
+            -- Setup noclip
+            local Noclipping = nil
+            local function NoclipLoop()
+                if character then
+                    for _, child in pairs(character:GetDescendants()) do
+                        if child:IsA("BasePart") and child.CanCollide == true then
+                            child.CanCollide = false
+                        end
+                    end
+                end
+            end
+            Noclipping = game:GetService('RunService').Stepped:Connect(NoclipLoop)
+            
+            -- Create movement controls
+            local BG = Instance.new('BodyGyro')
+            local BV = Instance.new('BodyVelocity')
+            BG.P = 9e4
+            BG.Parent = root
+            BV.Parent = root
+            BG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+            BG.cframe = root.CFrame
+            BV.velocity = Vector3.new(0, 0, 0)
+            BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
+            
+            -- Start automation loop
+            _G.roadworkFarming = true
+            
+            coroutine.wrap(function()
+                local VIM = game:GetService("VirtualInputManager")
+                
+                while _G.roadworkFarming and task.wait(0.1) do
+                    if not character or not character.Parent or not root or not root.Parent then
+                        character = player.Character or player.CharacterAdded:Wait()
+                        root = character:WaitForChild("HumanoidRootPart")
+                        continue
+                    end
+                    
+                    local function isRoadworkTimerActive()
+                        local roadworkGui = player.PlayerGui.HUD.Miscs.Roadwork
+                        if not roadworkGui or not roadworkGui.Time then return false end
+                        local currentTime = roadworkGui.Time.Text
+                        task.wait(1.1)
+                        return currentTime ~= roadworkGui.Time.Text
+                    end
+                    
+                    if isRoadworkTimerActive() then
+                        BV.velocity = Vector3.new(0, 0, 0)
+                        
+                        -- Find and teleport to roadwork locations
+                        local roadworks = workspace.Ignore.Interactables.Roadworks.Long
+                        for i = 1, 22 do
+                            local part = roadworks:FindFirstChild(tostring(i))
+                            if part and part:FindFirstChild("LocationBill") then
+                                root.CFrame = CFrame.new(part.Position + Vector3.new(0, -4, 0))
+                                break
+                            end
+                        end
+                    else
+                        -- Move to Saitama when timer is not active
+                        local saitama = workspace.Ignore.NPCs["Important NPCs"].Saitama
+                        if saitama then
+                            local targetPos = saitama.PrimaryPart.Position - Vector3.new(0, 10, 0)
+                            local distance = (targetPos - root.Position).Magnitude
+                            local direction = (targetPos - root.Position).Unit
+                            
+                            if distance > 10 then
+                                BV.velocity = direction * math.min(200, distance * .35)
+                            elseif distance > 5 then
+                                BV.velocity = direction * 8
+                            else
+                                root.CFrame = CFrame.new(root.Position + Vector3.new(0, 10, 0))
+                                BV.velocity = Vector3.new(0, 0, 0)
+                                
+                                -- Interact with Saitama
+                                local startTime = tick()
+                                while not isRoadworkTimerActive() and (tick() - startTime) < 10 do
+                                    VIM:SendKeyEvent(true, "E", false, game)
+                                    task.wait(0.1)
+                                    VIM:SendKeyEvent(false, "E", false, game)
+                                    task.wait(0.1)
+                                    VIM:SendKeyEvent(true, "One", false, game)
+                                    task.wait(0.1)
+                                    VIM:SendKeyEvent(false, "One", false, game)
+                                end
+                                task.wait(5)
+                            end
+                        end
+                    end
+                end
+            end)()
+        else
+            -- Stop the automation
+            _G.roadworkFarming = false
+            
+            -- Clean up movement controls if they exist
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                local root = character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    local bg = root:FindFirstChild("BodyGyro")
+                    local bv = root:FindFirstChild("BodyVelocity")
+                    if bg then bg:Destroy() end
+                    if bv then bv:Destroy() end
+                end
+            end
+        end
+    end
+})
+
+-- Helper functions (add these after the toggle)
