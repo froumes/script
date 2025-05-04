@@ -1,3 +1,5 @@
+wait (13)
+
 -- Combined Script: Fires a ProximityPrompt and interacts with a GUI
 
 local Players = game:GetService("Players")
