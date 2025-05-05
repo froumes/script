@@ -1,5 +1,9 @@
-wait (13)
+-- Wait until the game is fully loaded
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
 
+wait (5)
 -- Combined Script: Fires a ProximityPrompt and interacts with a GUI
 
 local Players = game:GetService("Players")
